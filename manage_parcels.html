@@ -167,7 +167,9 @@
             if (savedParcels) {
                 parcels = JSON.parse(savedParcels);
             } else {
+                // First load: seed localStorage with sample data so dashboard stats sync correctly
                 parcels = sampleParcels;
+                localStorage.setItem('parcels', JSON.stringify(parcels));
             }
             filteredParcels = [...parcels];
             renderTable();
