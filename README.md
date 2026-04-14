@@ -8,17 +8,20 @@ A professional, responsive web application for managing student parcel deliverie
 ## 📁 File Structure
 ```
 project/
-├── index.html          (Student Search Page)
-├── dashboard.html      (Watchman Dashboard - Add Parcels)
-├── list.html           (Watchman - View All Parcels)
-├── handover.html       (Watchman - Parcel Handover System)
-├── styles.css          (Common Styling for All Pages)
-└── README.md           (This File)
-```
+├── frontend/
+│   ├── index.html          (Student Search Page)
+│   ├── dashboard.html      (Watchman Dashboard)
+│   ├── list.html           (Watchman View All)
+│   ├── handover.html       (Watchman Handover)
+│   └── styles.css          
+├── backend/                
+│   ├── server.js           (Node.js API Engine)
+│   ├── schema.sql          (MySQL Database Blueprint)
+│   ├── package.json        (Dependencies)
+│   └── .env                (Hidden DB Credentials)
+└── README.md               (This File)
 
----
-
-## 🎯 Features
+```## 🎯 Features
 
 ### STUDENT INTERFACE (index.html)
 - **Search Page Only**: Limited access to search functionality
@@ -76,13 +79,10 @@ project/
 ---
 
 ## 💾 Data Persistence
-- **Local Storage**: All parcel data is saved in browser's localStorage
-- **Persistent Changes**: Added parcels, status updates, and handovers are saved permanently
-- **Cross-Session**: Data persists across browser sessions and page refreshes
-- **Sequential IDs**: Parcel numbers are simple sequential (1, 2, 3...) instead of timestamps
-- **Daily Reset**: Parcel numbers reset to 1 each day (format: YYYY-MM-DD-001, YYYY-MM-DD-002, etc.)
-- **Real-time Sync**: All pages show live data from shared storage
-
+- **MySQL Database**: All parcel data, student information, and delivery statuses are securely stored in a relational database.
+- **RESTful API**: A custom Node.js/Express backend handles all data requests securely.
+- **Real-time Sync**: The frontend fetches live data from the database, meaning if one watchman updates a parcel on their computer, it immediately updates for everyone else.
+- **Sequential IDs**: Parcel numbers are generated dynamically by the backend.
 ---
 
 ## 🎨 Design Features
@@ -135,7 +135,9 @@ project/
 - **HTML5**: Semantic markup
 - **CSS3**: Modern styling with Flexbox & Grid
 - **JavaScript (ES6)**: Interactive features (minimal, no external libraries)
-
+- **Node.js & Express**: High-performance server environment and routing framework
+- **MySQL**: Relational database for robust data management
+- ** REST API**: Custom-built endpoints (GET, POST, PUT) for client-server communication
 ### JavaScript Features:
 - Search functionality with filtering
 - Dynamic table population
@@ -145,6 +147,22 @@ project/
 - Success message animations
 
 ---
+## 🚀 Installation & Setup
+
+**1. Database Setup:**
+- Open MySQL Workbench or XAMPP.
+- Run the provided `schema.sql` file to automatically build the `parcel_management` database and tables.
+
+**2. Backend Setup:**
+- Open the terminal in the project folder.
+- Run `npm install` to download dependencies (Express, MySQL2, CORS, Dotenv).
+- Create a `.env` file and add your local database credentials (`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`).
+- Run `node server.js` to start the backend API on port 3000.
+
+**3. Frontend Setup:**
+- Once the server is running, simply open any `.html` file in your browser to start using the system!
+---
+
 
 ## 🔒 Security & Access Control
 - **Role-Based UI**: Different interfaces for students and watchman
@@ -177,7 +195,6 @@ The system comes with pre-populated sample data:
 - Real-looking names and phone numbers
 
 ---
-
 ## 🎓 College Submission Notes
 This project is designed to be:
 - Professional and presentable

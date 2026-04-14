@@ -14,8 +14,8 @@
             
             <form onsubmit="handleStudentLogin(event)">
                 <div class="form-group">
-                    <label for="sap_id">SAP ID or Phone Number</label>
-                    <input type="text" id="sap_id" placeholder="12345001 or 9876543210" required>
+                    <label for="sap_id">SAP ID (11 digits)</label>
+                    <input type="text" id="sap_id" placeholder="Enter 11-digit SAP ID" pattern="\d{11}" maxlength="11" required>
                 </div>
 
                 <div class="form-group">
@@ -37,7 +37,9 @@
     </div>
 
     <script>
-        function handleStudentLogin(event) {
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        async function handleStudentLogin(event) {
             event.preventDefault();
             const sapId = document.getElementById('sap_id').value.trim();
             const password = document.getElementById('password').value.trim();
@@ -47,19 +49,32 @@
                 return;
             }
 
-            // Store login data
-            const loginData = {
-                sapId: sapId,
-                role: 'student',
-                loginTime: new Date().toISOString()
-            };
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/student/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sap_id: sapId, password: password })
+                });
 
-            localStorage.setItem('studentLogin', JSON.stringify(loginData));
-            
-            // Redirect to student dashboard
-            setTimeout(() => {
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.error || 'Login failed. Please check your credentials.');
+                    return;
+                }
+
+                // Store login data
+                localStorage.setItem('studentLogin', JSON.stringify({
+                    ...data.user,
+                    loginTime: new Date().toISOString()
+                }));
+                
+                // Redirect to student dashboard
                 window.location.href = 'student_dashboard.html';
-            }, 100);
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Failed to connect to server. Please try again.');
+            }
         }
 
         // Allow Enter key to submit

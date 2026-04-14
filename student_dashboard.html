@@ -29,7 +29,7 @@
         <h2 class="page-title">My Parcels</h2>
 
         <div class="dashboard-welcome">
-            <h3>Welcome, Student</h3>
+            <h3 id="welcomeMessage">Welcome, Student</h3>
             <p>Below are the parcels assigned to your account</p>
         </div>
 
@@ -69,15 +69,33 @@
     </div>
 
     <script>
-        function checkLogin() {
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        async function checkLogin() {
             const studentLogin = localStorage.getItem('studentLogin');
             if (!studentLogin) {
                 window.location.href = 'login.html';
                 return;
             }
             
-            const data = JSON.parse(studentLogin);
-            document.getElementById('userDisplay').textContent = '👨‍🎓 ' + data.sapId;
+            try {
+                const data = JSON.parse(studentLogin);
+                if (!data.sap_id) {
+                    // Invalid login data
+                    localStorage.removeItem('studentLogin');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const studentName = data.name || 'Student';
+                document.getElementById('userDisplay').textContent = '👨‍🎓 ' + studentName;
+                document.getElementById('welcomeMessage').textContent = 'Welcome, ' + studentName;
+                await loadStudentParcels(data.sap_id, data.phone);
+            } catch (e) {
+                console.error('Error parsing login data:', e);
+                localStorage.removeItem('studentLogin');
+                window.location.href = 'login.html';
+            }
         }
 
         function logout() {
@@ -85,64 +103,62 @@
             window.location.href = 'role_selection.html';
         }
 
-        function renderParcels() {
-            const studentLogin = JSON.parse(localStorage.getItem('studentLogin') || '{}');
-            const studentSapId = studentLogin.sapId;
+        async function loadStudentParcels(sapId, phone) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/parcels/student?sap_id=${encodeURIComponent(sapId)}`);
+                let parcels = await response.json();
 
-            // Get student mappings to find phone number from SAP ID
-            const studentMappings = JSON.parse(localStorage.getItem('studentMappings')) || {};
-            
-            // Find the phone number for this SAP ID
-            let studentPhone = null;
-            for (const [phone, student] of Object.entries(studentMappings)) {
-                if (student.sapId === studentSapId) {
-                    studentPhone = phone;
-                    break;
+                // If no parcels found by SAP ID, try by phone
+                if (parcels.length === 0 && phone) {
+                    const phoneResponse = await fetch(`${API_BASE_URL}/parcels/student?phone=${encodeURIComponent(phone)}`);
+                    parcels = await phoneResponse.json();
                 }
+
+                renderParcels(parcels);
+            } catch (error) {
+                console.error('Error loading parcels:', error);
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('emptyState').textContent = 'Failed to load parcels. Please try again.';
             }
+        }
 
-            console.log('Student SAP ID:', studentSapId);
-            console.log('Student Phone:', studentPhone);
-            console.log('Student Mappings:', studentMappings);
-
-            // Get actual parcels from admin dashboard
-            const allParcels = JSON.parse(localStorage.getItem('parcels')) || [];
-            console.log('All Parcels:', allParcels);
-            
-            // Filter parcels by phone number (only if we found the student's phone)
-            const filtered = studentPhone ? allParcels.filter(p => p.phone === studentPhone) : [];
-            console.log('Filtered Parcels:', filtered);
-
+        function renderParcels(parcels) {
             const tableBody = document.getElementById('parcelTableBody');
             const totalCount = document.getElementById('totalCount');
             const arrivedCount = document.getElementById('arrivedCount');
             const deliveredCount = document.getElementById('deliveredCount');
             const emptyState = document.getElementById('emptyState');
 
-            totalCount.textContent = filtered.length;
-            arrivedCount.textContent = filtered.filter(p => p.status === 'Arrived').length;
-            deliveredCount.textContent = filtered.filter(p => p.status === 'Delivered').length;
+            totalCount.textContent = parcels.length;
+            arrivedCount.textContent = parcels.filter(p => p.status === 'Arrived').length;
+            deliveredCount.textContent = parcels.filter(p => p.status === 'Delivered').length;
 
-            if (filtered.length === 0) {
+            if (parcels.length === 0) {
                 tableBody.innerHTML = '';
                 emptyState.style.display = 'block';
+                emptyState.textContent = 'No parcels found for your account';
                 return;
             }
 
             emptyState.style.display = 'none';
-            tableBody.innerHTML = filtered.map(parcel => `
+            tableBody.innerHTML = parcels.map(parcel => `
                 <tr>
-                    <td>${parcel.id.split('-').pop()}</td>
+                    <td><strong>${parcel.parcel_id}</strong></td>
                     <td><span class="card-status status-${parcel.status.toLowerCase()}">${parcel.status}</span></td>
-                    <td>${parcel.arrivalDate}</td>
+                    <td>${formatDate(parcel.arrival_date)}</td>
                     <td>${parcel.source}</td>
-                    <td>${parcel.deliveryDate || (parcel.status === 'Delivered' ? parcel.arrivalDate : '-')}</td>
+                    <td>${parcel.delivery_date ? formatDate(parcel.delivery_date) : '-'}</td>
                 </tr>
             `).join('');
         }
 
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN');
+        }
+
         checkLogin();
-        renderParcels();
     </script>
 </body>
 </html>

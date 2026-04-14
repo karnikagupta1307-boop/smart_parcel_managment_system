@@ -21,8 +21,7 @@
     <!-- NAVIGATION -->
     <nav>
         <a href="dashboard.html">Dashboard</a>
-        <a href="list.html">Parcel List</a>
-        <a href="handover.html" class="active">Parcel Handover</a>
+        <a href="manage_parcels.html">Manage Parcels</a>
     </nav>
 
     <!-- MAIN CONTENT -->
@@ -81,9 +80,11 @@
     </div>
 
     <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
         let currentParcel = null;
+        let allParcels = [];
 
-        function checkAdminLogin() {
+        async function checkAdminLogin() {
             const adminLogin = localStorage.getItem('adminLogin');
             if (!adminLogin) {
                 window.location.href = 'admin_login.html';
@@ -92,6 +93,16 @@
 
             const data = JSON.parse(adminLogin);
             document.getElementById('userDisplay').textContent = '👮 ' + data.username;
+            await loadAllParcels();
+        }
+
+        async function loadAllParcels() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/parcels`);
+                allParcels = await response.json();
+            } catch (error) {
+                console.error('Error loading parcels:', error);
+            }
         }
 
         function logout() {
@@ -111,8 +122,11 @@
                 return;
             }
 
-            const parcels = JSON.parse(localStorage.getItem('parcels')) || [];
-            const parcel = parcels.find(p => String(p.id).toUpperCase() === parcelNumber);
+            // Search by parcel_id (full or partial)
+            const parcel = allParcels.find(p => 
+                String(p.parcel_id).toUpperCase() === parcelNumber ||
+                String(p.parcel_id).split('-').pop() === parcelNumber
+            );
 
             if (!parcel) {
                 detailsSection.style.display = 'none';
@@ -122,11 +136,10 @@
             }
 
             currentParcel = parcel;
-            const parcelIndex = parcels.indexOf(parcel);
 
-            document.getElementById('parcelIdHeader').textContent = `Parcel ${parcel.id}`;
-            document.getElementById('detailParcelId').textContent = parcel.id;
-            document.getElementById('detailStudentName').textContent = parcel.studentName;
+            document.getElementById('parcelIdHeader').textContent = `Parcel ${parcel.parcel_id}`;
+            document.getElementById('detailParcelId').textContent = parcel.parcel_id;
+            document.getElementById('detailStudentName').textContent = parcel.student_name;
             document.getElementById('detailPhone').textContent = parcel.phone;
             
             const statusElement = document.getElementById('detailStatus');
@@ -149,18 +162,22 @@
             }
         }
 
-        function confirmHandover() {
+        async function confirmHandover() {
             if (!currentParcel) return;
 
-            const parcels = JSON.parse(localStorage.getItem('parcels')) || [];
-            const parcelIndex = parcels.findIndex(p => p.id === currentParcel.id);
+            try {
+                const response = await fetch(`${API_BASE_URL}/parcels/${currentParcel.parcel_id}/deliver`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-            if (parcelIndex !== -1) {
-                parcels[parcelIndex].status = 'Delivered';
-                parcels[parcelIndex].deliveryDate = new Date().toLocaleDateString('en-IN');
+                if (!response.ok) {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to update parcel');
+                    return;
+                }
+
                 currentParcel.status = 'Delivered';
-
-                localStorage.setItem('parcels', JSON.stringify(parcels));
 
                 const statusElement = document.getElementById('detailStatus');
                 statusElement.textContent = 'Delivered';
@@ -174,9 +191,15 @@
                 confirmBtn.style.opacity = '0.5';
                 confirmBtn.textContent = 'Already Delivered';
 
+                // Refresh parcels list
+                await loadAllParcels();
+
                 setTimeout(() => {
                     successMessage.classList.remove('show');
                 }, 4000);
+            } catch (error) {
+                console.error('Error updating parcel:', error);
+                alert('Failed to connect to server');
             }
         }
 

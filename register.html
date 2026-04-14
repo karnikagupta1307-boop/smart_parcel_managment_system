@@ -15,22 +15,22 @@
             <form onsubmit="handleStudentRegister(event)">
                 <div class="form-group">
                     <label for="name">Full Name</label>
-                    <input type="text" id="name" placeholder="Enter your full name" required>
+                    <input type="text" id="name" placeholder="Enter your full name" pattern="[a-zA-Z\s]{2,100}" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="sap_id">SAP ID</label>
-                    <input type="text" id="sap_id" placeholder="12345001" required>
+                    <label for="sap_id">SAP ID (11 digits)</label>
+                    <input type="text" id="sap_id" placeholder="12345678901" pattern="\d{11}" maxlength="11" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" placeholder="9876543210" required>
+                    <label for="phone">Phone Number (10 digits)</label>
+                    <input type="tel" id="phone" placeholder="9876543210" pattern="\d{10}" maxlength="10" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" placeholder="Create a password" required>
+                    <label for="password">Password (min 6 characters)</label>
+                    <input type="password" id="password" placeholder="Create a password" minlength="6" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-full">Register</button>
@@ -47,31 +47,44 @@
     </div>
 
     <script>
-        function handleStudentRegister(event) {
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        async function handleStudentRegister(event) {
             event.preventDefault();
-            const name = document.getElementById('name').value;
-            const sapId = document.getElementById('sap_id').value;
-            const phone = document.getElementById('phone').value;
-            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value.trim();
+            const sapId = document.getElementById('sap_id').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value.trim();
 
-            if (name.trim() && sapId.trim() && phone.trim() && password.trim()) {
-                // Store student info
-                localStorage.setItem('studentSignup', JSON.stringify({
-                    name: name,
-                    sapId: sapId,
-                    phone: phone
-                }));
+            if (!name || !sapId || !phone || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
 
-                // Also store in a students mapping (phone -> sapId) for admin dashboard lookup
-                const studentMappings = JSON.parse(localStorage.getItem('studentMappings')) || {};
-                studentMappings[phone] = {
-                    sapId: sapId,
-                    name: name
-                };
-                localStorage.setItem('studentMappings', JSON.stringify(studentMappings));
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/student/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        sap_id: sapId,
+                        phone: phone,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.error || 'Registration failed');
+                    return;
+                }
 
                 alert('Registration successful! Please login with your credentials.');
                 window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Failed to connect to server. Please try again.');
             }
         }
     </script>

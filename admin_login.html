@@ -37,7 +37,9 @@
     </div>
 
     <script>
-        function handleAdminLogin(event) {
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        async function handleAdminLogin(event) {
             event.preventDefault();
             
             const username = document.getElementById('username').value.trim();
@@ -50,34 +52,35 @@
                 return false;
             }
 
-            const validCredentials = [
-                { username: 'admin', password: 'admin123' },
-                { username: 'watchman', password: 'pass123' },
-                { username: 'staff', password: 'staff123' }
-            ];
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
 
-            const isValid = validCredentials.some(cred => 
-                cred.username === username && cred.password === password
-            );
+                const data = await response.json();
 
-            if (!isValid) {
-                errorMessage.textContent = 'Invalid credentials. Try watchman / pass123 or admin / admin123';
+                if (!response.ok) {
+                    errorMessage.textContent = data.error || 'Invalid credentials';
+                    errorMessage.style.display = 'block';
+                    return false;
+                }
+
+                errorMessage.style.display = 'none';
+
+                localStorage.setItem('adminLogin', JSON.stringify({
+                    ...data.user,
+                    loginTime: new Date().toISOString()
+                }));
+                localStorage.removeItem('studentLogin');
+                
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                console.error('Login error:', error);
+                errorMessage.textContent = 'Failed to connect to server. Please try again.';
                 errorMessage.style.display = 'block';
-                return false;
             }
-
-            errorMessage.style.display = 'none';
-
-            const loginData = {
-                username: username,
-                role: 'admin',
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem('adminLogin', JSON.stringify(loginData));
-            localStorage.removeItem('studentLogin');
-            
-            window.location.href = 'dashboard.html';
             return false;
         }
     </script>

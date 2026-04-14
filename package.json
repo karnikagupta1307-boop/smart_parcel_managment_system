@@ -2,8 +2,10 @@
   "name": "parcel-management",
   "version": "1.0.0",
   "description": "A professional, responsive web application for managing student parcel deliveries. The system features role-based access with separate interfaces for students and watchman/staff.",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,9 +21,10 @@
   },
   "homepage": "https://github.com/karnikagupta1307-boop/my-first-project#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
-    "mysql2": "^3.20.0"
+    "mysql2": "^3.21.0"
   }
 }

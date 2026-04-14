@@ -5,6 +5,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Parcels - Smart Parcel Management System</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Professional Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .page-title {
+            color: #d32f2f;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        /* Professional Search Panel Styles */
+        .search-panel {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+
+        .search-panel-header {
+            background: linear-gradient(135deg, #d32f2f 0%, #c62828 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .search-panel-header svg {
+            stroke: white;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+            align-items: end;
+        }
+
+        .search-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .search-field-wide {
+            grid-column: span 2;
+        }
+
+        .search-field label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            color: #495057;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .search-field label svg {
+            stroke: #d32f2f;
+        }
+
+        .search-input {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #d32f2f;
+            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .search-actions {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #d32f2f;
+            border: 2px solid #d32f2f;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-outline:hover {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .btn-outline svg {
+            stroke: currentColor;
+        }
+
+        @media (max-width: 768px) {
+            .search-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .search-field-wide {
+                grid-column: span 1;
+            }
+
+            .search-actions {
+                justify-content: stretch;
+            }
+
+            .btn-outline {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- HEADER -->
@@ -26,7 +174,10 @@
 
     <!-- MAIN CONTENT -->
     <div class="container">
-        <h2 class="page-title">Manage Parcels</h2>
+        <div class="page-header">
+            <h2 class="page-title">Manage Parcels</h2>
+            <p class="page-subtitle">View, search, and manage all parcel deliveries</p>
+        </div>
 
         <!-- SUCCESS MESSAGE -->
         <div class="success-message" id="successMessage">
@@ -35,16 +186,43 @@
         </div>
 
         <!-- FILTER & SEARCH SECTION -->
-        <div class="filter-container">
-            <div class="filter-group">
-                <label for="dateFilter">📅 Select Date</label>
-                <input type="date" id="dateFilter" onchange="filterParcels()">
+        <div class="search-panel">
+            <div class="search-panel-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span>Search & Filter Parcels</span>
             </div>
+            
+            <div class="search-grid">
+                <div class="search-field">
+                    <label for="dateFilter">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Arrival Date
+                    </label>
+                    <input type="date" id="dateFilter" onchange="filterParcels()" class="search-input">
+                </div>
 
-            <div class="search-group">
-                <input type="text" id="searchInput" placeholder="🔍 Search by Parcel ID / Name / Phone / SAP ID" oninput="searchParcels()">
-                <button class="btn btn-secondary" onclick="filterParcels()" style="margin-right: 0.75rem;">Search</button>
-                <button class="btn btn-primary" onclick="clearFilters()">Clear Filters</button>
+                <div class="search-field">
+                    <label for="parcelIdSearch">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                        Parcel ID
+                    </label>
+                    <input type="text" id="parcelIdSearch" placeholder="e.g., 1, 2, 3" oninput="filterParcels()" class="search-input">
+                </div>
+
+                <div class="search-field search-field-wide">
+                    <label for="searchInput">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Student Name / Phone / SAP ID
+                    </label>
+                    <input type="text" id="searchInput" placeholder="Search by student details..." oninput="filterParcels()" class="search-input">
+                </div>
+
+                <div class="search-actions">
+                    <button class="btn btn-outline" onclick="clearFilters()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        Clear Filters
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -74,87 +252,33 @@
     </div>
 
     <script>
-        // Sample parcel data
-        const sampleParcels = [
-            {
-                id: '001',
-                studentName: 'Rajesh Kumar',
-                phone: '9876543210',
-                source: 'Amazon',
-                arrivalDate: '2026-04-07',
-                status: 'Arrived'
-            },
-            {
-                id: '002',
-                studentName: 'Priya Singh',
-                phone: '9876543211',
-                source: 'Flipkart',
-                arrivalDate: '2026-04-07',
-                status: 'Arrived'
-            },
-            {
-                id: '003',
-                studentName: 'Amit Patel',
-                phone: '9876543212',
-                source: 'Myntra',
-                arrivalDate: '2026-04-06',
-                status: 'Delivered'
-            },
-            {
-                id: '004',
-                studentName: 'Neha Sharma',
-                phone: '9765432101',
-                source: 'Amazon',
-                arrivalDate: '2026-04-05',
-                status: 'Arrived'
-            },
-            {
-                id: '005',
-                studentName: 'Arjun Das',
-                phone: '8765432101',
-                source: 'Flipkart',
-                arrivalDate: '2026-04-04',
-                status: 'Delivered'
-            },
-            {
-                id: '006',
-                studentName: 'Kavya Nair',
-                phone: '7765432101',
-                source: 'Myntra',
-                arrivalDate: '2026-04-07',
-                status: 'Arrived'
-            },
-            {
-                id: '007',
-                studentName: 'Vikram Singh',
-                phone: '9876543213',
-                source: 'Amazon',
-                arrivalDate: '2026-04-03',
-                status: 'Delivered'
-            },
-            {
-                id: '008',
-                studentName: 'Pooja Verma',
-                phone: '9876543214',
-                source: 'Flipkart',
-                arrivalDate: '2026-04-02',
-                status: 'Arrived'
-            }
-        ];
+        const API_BASE_URL = 'http://localhost:3000/api';
+        let parcels = [];
+        let filteredParcels = [];
 
-        let parcels = sampleParcels;
-        let filteredParcels = [...parcels];
-
-        function checkAdminLogin() {
+        async function checkAdminLogin() {
             const adminLogin = localStorage.getItem('adminLogin');
             if (!adminLogin) {
                 window.location.href = 'admin_login.html';
                 return;
             }
 
-            const data = JSON.parse(adminLogin);
-            document.getElementById('userDisplay').textContent = '👮 ' + data.username;
-            loadParcels();
+            try {
+                const data = JSON.parse(adminLogin);
+                if (!data.username) {
+                    // Invalid login data
+                    localStorage.removeItem('adminLogin');
+                    window.location.href = 'admin_login.html';
+                    return;
+                }
+                
+                document.getElementById('userDisplay').textContent = '👮 ' + data.username;
+                await loadParcels();
+            } catch (e) {
+                console.error('Error parsing login data:', e);
+                localStorage.removeItem('adminLogin');
+                window.location.href = 'admin_login.html';
+            }
         }
 
         function logout() {
@@ -162,21 +286,21 @@
             window.location.href = 'role_selection.html';
         }
 
-        function loadParcels() {
-            const savedParcels = localStorage.getItem('parcels');
-            if (savedParcels) {
-                parcels = JSON.parse(savedParcels);
-            } else {
-                parcels = sampleParcels;
+        async function loadParcels() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/parcels`);
+                parcels = await response.json();
+                filteredParcels = [...parcels];
+                renderTable();
+            } catch (error) {
+                console.error('Error loading parcels:', error);
+                alert('Failed to load parcels from server');
             }
-            filteredParcels = [...parcels];
-            renderTable();
         }
 
         function renderTable() {
             const tableBody = document.getElementById('parcelTableBody');
             const noResults = document.getElementById('noResultsMessage');
-            const studentMappings = JSON.parse(localStorage.getItem('studentMappings')) || {};
 
             if (filteredParcels.length === 0) {
                 tableBody.innerHTML = '';
@@ -185,19 +309,15 @@
             }
 
             noResults.style.display = 'none';
-            tableBody.innerHTML = filteredParcels.map((parcel, index) => {
-                // Look up SAP ID from phone number
-                const sapId = studentMappings[parcel.phone]?.sapId || 'N/A';
-                
-                const visibleId = parcel.id.split('-').pop();
+            tableBody.innerHTML = filteredParcels.map((parcel) => {
                 return `
                 <tr>
-                    <td>${visibleId}</td>
-                    <td>${parcel.studentName}</td>
-                    <td>${sapId}</td>
+                    <td><strong>${parcel.parcel_id}</strong></td>
+                    <td>${parcel.student_name}</td>
+                    <td>${parcel.sap_id || 'N/A'}</td>
                     <td>${parcel.phone}</td>
                     <td>${parcel.source}</td>
-                    <td>${parcel.arrivalDate}</td>
+                    <td>${formatDate(parcel.arrival_date)}</td>
                     <td>
                         <span class="card-status status-${parcel.status.toLowerCase()}">
                             ${parcel.status}
@@ -205,7 +325,7 @@
                     </td>
                     <td>
                         ${parcel.status === 'Arrived' ? 
-                            `<button class="btn btn-small btn-primary" onclick="markAsDelivered('${parcel.id}')">
+                            `<button class="btn btn-small btn-primary" onclick="markAsDelivered('${parcel.parcel_id}')">
                                 Mark as Delivered
                             </button>` 
                             : 
@@ -217,19 +337,35 @@
             }).join('');
         }
 
-        function markAsDelivered(parcelId) {
-            const parcelIndex = parcels.findIndex(p => p.id === parcelId);
-            if (parcelIndex !== -1) {
-                parcels[parcelIndex].status = 'Delivered';
-                parcels[parcelIndex].deliveryDate = new Date().toLocaleDateString('en-IN');
-                localStorage.setItem('parcels', JSON.stringify(parcels));
-                loadParcels();
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN');
+        }
+
+        async function markAsDelivered(parcelId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/parcels/${parcelId}/deliver`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    alert(data.error || 'Failed to update parcel');
+                    return;
+                }
+
+                await loadParcels();
 
                 const successMessage = document.getElementById('successMessage');
                 successMessage.classList.add('show');
                 setTimeout(() => {
                     successMessage.classList.remove('show');
                 }, 3000);
+            } catch (error) {
+                console.error('Error updating parcel:', error);
+                alert('Failed to connect to server');
             }
         }
 
@@ -253,29 +389,27 @@
             const dateFilter = normalizeDateValue(rawDateFilter);
             const rawSearchFilter = document.getElementById('searchInput').value;
             const searchFilter = rawSearchFilter.trim().toLowerCase();
-            const studentMappings = JSON.parse(localStorage.getItem('studentMappings')) || {};
+            const parcelIdFilter = document.getElementById('parcelIdSearch').value.trim();
 
             filteredParcels = parcels.filter(parcel => {
-                const dateMatch = !dateFilter || parcel.arrivalDate === dateFilter;
+                // Date filter
+                const dateMatch = !dateFilter || parcel.arrival_date === dateFilter;
+                
+                // Parcel ID filter
+                const parcelIdMatch = !parcelIdFilter || parcel.parcel_id === parcelIdFilter;
 
-                // Look up SAP ID for this phone
-                const sapId = (studentMappings[parcel.phone]?.sapId || '').toLowerCase();
-                const studentName = (parcel.studentName || '').toLowerCase();
+                // General search filter
+                const sapId = (parcel.sap_id || '').toLowerCase();
+                const studentName = (parcel.student_name || '').toLowerCase();
                 const phone = String(parcel.phone || '');
-                const fullId = String(parcel.id || '').toLowerCase();
-                const visibleId = fullId.split('-').pop();
-                const parcelIdOnly = /^[0-9]{1,3}$/.test(searchFilter);
+                
+                const searchMatch = !searchFilter || (
+                    studentName.includes(searchFilter) ||
+                    phone.includes(searchFilter) ||
+                    sapId.includes(searchFilter)
+                );
 
-                const searchMatch = !searchFilter || 
-                    (parcelIdOnly ? visibleId === searchFilter : (
-                        studentName.includes(searchFilter) ||
-                        phone.includes(searchFilter) ||
-                        fullId.includes(searchFilter) ||
-                        visibleId.includes(searchFilter) ||
-                        sapId.includes(searchFilter)
-                    ));
-
-                return dateMatch && searchMatch;
+                return dateMatch && parcelIdMatch && searchMatch;
             });
 
             renderTable();
@@ -287,6 +421,7 @@
 
         function clearFilters() {
             document.getElementById('dateFilter').value = '';
+            document.getElementById('parcelIdSearch').value = '';
             document.getElementById('searchInput').value = '';
             filteredParcels = [...parcels];
             renderTable();

@@ -69,8 +69,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="phoneNumber">Phone Number</label>
-                        <input type="tel" id="phoneNumber" placeholder="9876543210" pattern="[0-9]{10}" required>
+                        <label for="phoneNumber">Phone Number (10 digits)</label>
+                        <input type="tel" id="phoneNumber" placeholder="9876543210" pattern="\d{10}" maxlength="10" required>
                     </div>
 
                     <div class="form-group">
@@ -84,8 +84,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="deliveryPhone">Delivery Person Phone</label>
-                        <input type="tel" id="deliveryPhone" placeholder="9876543210" pattern="[0-9]{10}" required>
+                        <label for="deliveryPhone">Delivery Person Phone (10 digits)</label>
+                        <input type="tel" id="deliveryPhone" placeholder="9876543210" pattern="\d{10}" maxlength="10" required>
                     </div>
                 </div>
 
@@ -95,16 +95,31 @@
     </div>
 
     <script>
-        function checkAdminLogin() {
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        async function checkAdminLogin() {
             const adminLogin = localStorage.getItem('adminLogin');
             if (!adminLogin) {
                 window.location.href = 'admin_login.html';
                 return;
             }
             
-            const data = JSON.parse(adminLogin);
-            document.getElementById('userDisplay').textContent = '👮 ' + data.username;
-            updateStatistics();
+            try {
+                const data = JSON.parse(adminLogin);
+                if (!data.username) {
+                    // Invalid login data
+                    localStorage.removeItem('adminLogin');
+                    window.location.href = 'admin_login.html';
+                    return;
+                }
+                
+                document.getElementById('userDisplay').textContent = '👮 ' + data.username;
+                await updateStatistics();
+            } catch (e) {
+                console.error('Error parsing login data:', e);
+                localStorage.removeItem('adminLogin');
+                window.location.href = 'admin_login.html';
+            }
         }
 
         function logout() {
@@ -112,72 +127,62 @@
             window.location.href = 'role_selection.html';
         }
 
-        function clearAllData() {
-            if (confirm('⚠️ Are you sure you want to DELETE ALL PARCELS? This cannot be undone!')) {
-                localStorage.removeItem('parcels');
-                alert('✓ All parcel data has been cleared!');
-                location.reload();
+        async function updateStatistics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
+                const stats = await response.json();
+
+                document.getElementById('totalStat').textContent = stats.total;
+                document.getElementById('deliveredStat').textContent = stats.delivered;
+                document.getElementById('pendingStat').textContent = stats.pending;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
             }
         }
 
-        function handleAddParcel(event) {
+        async function handleAddParcel(event) {
             event.preventDefault();
             
-            const studentName = document.getElementById('studentName').value;
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const source = document.getElementById('source').value;
-            const deliveryPerson = document.getElementById('deliveryPerson').value;
-            const deliveryPhone = document.getElementById('deliveryPhone').value;
+            const studentName = document.getElementById('studentName').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const source = document.getElementById('source').value.trim();
+            const deliveryPerson = document.getElementById('deliveryPerson').value.trim();
+            const deliveryPhone = document.getElementById('deliveryPhone').value.trim();
 
-            // Get today's date
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            try {
+                const response = await fetch(`${API_BASE_URL}/parcels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_name: studentName,
+                        phone: phoneNumber,
+                        source: source,
+                        delivery_person: deliveryPerson,
+                        delivery_phone: deliveryPhone
+                    })
+                });
 
-            // Get all parcels
-            const parcels = JSON.parse(localStorage.getItem('parcels')) || [];
-            
-            // Count parcels added today
-            const todayCount = parcels.filter(p => p.arrivalDate === today).length;
-            const nextSequenceNumber = todayCount + 1;
-            
-            // Generate parcel ID: 2026-04-07-001, 2026-04-07-002, etc.
-            const parcelId = `${today}-${String(nextSequenceNumber).padStart(3, '0')}`;
+                const data = await response.json();
 
-            // Add new parcel
-            parcels.push({
-                id: parcelId,
-                studentName: studentName,
-                phone: phoneNumber,
-                source: source,
-                deliveryPerson: deliveryPerson,
-                deliveryPhone: deliveryPhone,
-                status: 'Arrived',
-                arrivalDate: today,
-                deliveryDate: ''
-            });
+                if (!response.ok) {
+                    alert(data.error || 'Failed to add parcel');
+                    return;
+                }
 
-            localStorage.setItem('parcels', JSON.stringify(parcels));
+                // Show success
+                const successMessage = document.getElementById('successMessage');
+                successMessage.classList.add('show');
+                setTimeout(() => {
+                    successMessage.classList.remove('show');
+                }, 3000);
 
-            // Show success
-            const successMessage = document.getElementById('successMessage');
-            successMessage.classList.add('show');
-            setTimeout(() => {
-                successMessage.classList.remove('show');
-            }, 3000);
-
-            // Reset form
-            event.target.reset();
-            updateStatistics();
-        }
-
-        function updateStatistics() {
-            const parcels = JSON.parse(localStorage.getItem('parcels')) || [];
-            const total = parcels.length;
-            const delivered = parcels.filter(p => p.status === 'Delivered').length;
-            const pending = total - delivered;
-
-            document.getElementById('totalStat').textContent = total;
-            document.getElementById('deliveredStat').textContent = delivered;
-            document.getElementById('pendingStat').textContent = pending;
+                // Reset form
+                event.target.reset();
+                await updateStatistics();
+            } catch (error) {
+                console.error('Error adding parcel:', error);
+                alert('Failed to connect to server. Please try again.');
+            }
         }
 
         checkAdminLogin();
