@@ -13,7 +13,8 @@ app.use(express.json());
 const SALT_ROUNDS = 10;
 const ADMIN_USERNAME = 'nmims@123';
 const ADMIN_PASSWORD = 'nmims123';
-const OTP_EXPIRY_MINUTES = 5;
+// OTP remains valid until parcel is collected (no time expiry)
+const OTP_EXPIRY_MINUTES = null;
 
 // Email configuration (configure with your email credentials)
 const transporter = nodemailer.createTransport({
@@ -177,7 +178,7 @@ async function createTables() {
             otp_code VARCHAR(6) NOT NULL,
             status ENUM('Active', 'Used', 'Expired') NOT NULL DEFAULT 'Active',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            expires_at DATETIME NOT NULL,
+            expires_at DATETIME NULL,
             used_at DATETIME DEFAULT NULL,
             FOREIGN KEY (parcel_id) REFERENCES parcels(parcel_id) ON DELETE CASCADE
         )
@@ -248,6 +249,21 @@ async function insertSampleData() {
 
 // Initialize database on startup
 initializeDatabase();
+
+// Fix parcel_otps table - set expires_at to far future for existing rows
+async function fixParcelOtpsTable() {
+    try {
+        await promiseDb.query(`
+            UPDATE parcel_otps 
+            SET expires_at = '2099-12-31 23:59:59' 
+            WHERE expires_at IS NULL OR expires_at < NOW()
+        `);
+        console.log('✓ parcel_otps table fixed');
+    } catch (err) {
+        console.log('ℹ parcel_otps table fix skipped');
+    }
+}
+fixParcelOtpsTable();
 
 // ==================== AUTHENTICATION APIs ====================
 
@@ -668,9 +684,8 @@ app.post('/api/otp/generate', async (req, res) => {
         // Generate 6-digit OTP
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Calculate expiry time
-        const expiresAt = new Date();
-        expiresAt.setMinutes(expiresAt.getMinutes() + OTP_EXPIRY_MINUTES);
+        // OTP valid until parcel is delivered (set to far future date)
+        const expiresAt = new Date('2099-12-31 23:59:59');
 
         // Save OTP to database
         await promiseDb.query(
@@ -695,7 +710,7 @@ app.post('/api/otp/generate', async (req, res) => {
                             </div>
                             <p><strong>Parcel ID:</strong> ${parcel_id}</p>
                             <p><strong>Source:</strong> ${parcels[0].source}</p>
-                            <p style="color: #666;">This OTP will expire in ${OTP_EXPIRY_MINUTES} minutes.</p>
+                            <p style="color: #666;">This OTP is valid until you collect your parcel.</p>
                             <p style="color: #666;">Do not share this OTP with anyone.</p>
                         </div>
                     `
@@ -743,18 +758,12 @@ app.post('/api/otp/verify', async (req, res) => {
 
         const otp = otps[0];
 
-        // Check if OTP is expired
-        const now = new Date();
-        const expiresAt = new Date(otp.expires_at);
-
-        if (now > expiresAt) {
-            // Mark OTP as expired
-            await promiseDb.query(
-                "UPDATE parcel_otps SET status = 'Expired' WHERE id = ?",
-                [otp.id]
-            );
-            return res.status(400).json({ error: "OTP has expired" });
+        // Check if OTP is already used
+        if (otp.status === 'Used') {
+            return res.status(400).json({ error: "OTP has already been used" });
         }
+        
+        // Note: OTP does not expire based on time - valid until parcel is collected
 
         // Mark OTP as used
         await promiseDb.query(

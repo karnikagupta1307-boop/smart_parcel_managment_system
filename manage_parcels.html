@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Manage Parcels - Smart Parcel Management System</title>
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -495,6 +498,10 @@
                 </div>
 
                 <div class="search-actions">
+                    <button class="btn btn-primary" onclick="searchParcels()" style="margin-right: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        Search
+                    </button>
                     <button class="btn btn-outline" onclick="clearFilters()">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         Clear Filters
@@ -772,22 +779,46 @@
             const searchFilter = rawSearchFilter.trim().toLowerCase();
             const parcelIdFilter = document.getElementById('parcelIdSearch').value.trim();
 
-            filteredParcels = parcels.filter(parcel => {
-                // Date filter
-                const dateMatch = !dateFilter || parcel.arrival_date === dateFilter;
-                
-                // Parcel ID filter
-                const parcelIdMatch = !parcelIdFilter || parcel.parcel_id === parcelIdFilter;
+            console.log('Date Filter:', dateFilter); // Debug
+            console.log('Sample parcel arrival_date:', parcels[0]?.arrival_date); // Debug
+            console.log('Sample parcel:', parcels[0]); // Debug
 
-                // General search filter
+            filteredParcels = parcels.filter(parcel => {
+                // Date filter - use arrival_date which matches what's displayed
+                let dateMatch = true;
+                if (dateFilter) {
+                    const parcelDateStr = parcel.arrival_date;
+                    if (parcelDateStr) {
+                        // arrival_date comes as ISO format: 2026-04-15T18:30:00.000Z
+                        // Convert to local date to match what's displayed in the table
+                        const parcelDate = new Date(parcelDateStr);
+                        const localYear = parcelDate.getFullYear();
+                        const localMonth = String(parcelDate.getMonth() + 1).padStart(2, '0');
+                        const localDay = String(parcelDate.getDate()).padStart(2, '0');
+                        const localDateStr = `${localYear}-${localMonth}-${localDay}`;
+                        console.log('Comparing:', localDateStr, '===', dateFilter); // Debug
+                        dateMatch = localDateStr === dateFilter;
+                    } else {
+                        dateMatch = false;
+                    }
+                }
+                
+                // Parcel ID filter - partial match allowed
+                const parcelIdMatch = !parcelIdFilter || String(parcel.parcel_id).includes(parcelIdFilter);
+
+                // General search filter - search in name, phone, sap_id, email, source
                 const sapId = (parcel.sap_id || '').toLowerCase();
                 const studentName = (parcel.student_name || '').toLowerCase();
                 const phone = String(parcel.phone || '');
+                const email = (parcel.email || '').toLowerCase();
+                const source = (parcel.source || '').toLowerCase();
                 
                 const searchMatch = !searchFilter || (
                     studentName.includes(searchFilter) ||
                     phone.includes(searchFilter) ||
-                    sapId.includes(searchFilter)
+                    sapId.includes(searchFilter) ||
+                    email.includes(searchFilter) ||
+                    source.includes(searchFilter)
                 );
 
                 return dateMatch && parcelIdMatch && searchMatch;
