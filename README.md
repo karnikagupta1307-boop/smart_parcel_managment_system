@@ -4,6 +4,39 @@
 A professional, responsive web application for managing student parcel deliveries. The system features role-based access with separate interfaces for students and watchman/staff.
 
 ---
+## 📸 Project Screenshots
+
+### 🏠 Home Page
+
+![Home Page](screenshots/Screenshot%202026-04-16%20161111.png)
+
+### 👨‍🎓 Student Login
+
+![Student Login](screenshots/Screenshot%202026-04-16%20161124.png)
+
+### 📦 Student Dashboard
+
+![Student Dashboard](screenshots/Screenshot%202026-04-16%20161336.png)
+
+### 👨‍💼 Admin Dashboard
+
+![Admin Dashboard](screenshots/Screenshot%202026-04-16%20161400.png)
+
+### 🔍 Manage Parcels
+
+![Manage Parcels](screenshots/Screenshot%202026-04-16%20161516.png)
+
+### 🔐 OTP Generation
+
+![OTP Generation](screenshots/Screenshot%202026-04-16%20161627.png)
+
+### 📧 OTP Email Notification
+
+![OTP Email](screenshots/Screenshot%202026-04-16%20161735.png)
+
+### ✅ Successful Parcel Delivery
+
+![Parcel Delivered](screenshots/Screenshot%202026-04-16%20161803.png)
 
 ## 📁 File Structure
 ```
